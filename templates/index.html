@@ -1,51 +1,602 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="beach">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Groq Voice Chatbot</title>
+  <title>Aura Voice AI — Groq Ultra-Fast Voice Companion</title>
+  <meta name="description" content="Experience cute, lightning-fast conversational voice AI powered by Groq LPUs. Featuring cozy atmospheric themes like Tropical Beach, Ocean Waves, and Sakura Blossom.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <div class="brand-mark">✦</div>
-      <div>
-        <h1>Voice Chatbot</h1>
+  <!-- Ambient Interactive Canvas Background -->
+  <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
+
+  <div class="app-layout">
+    <!-- Left Navigation & Controls Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Navigation and Sessions">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="brand-orb cute-orb">
+            <span class="orb-emoji">🌸</span>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">AURA <span class="badge-tech">VOICE 🏖️</span></span>
+            <span class="brand-sub">Groq LPU Engine • Cozy & Fast</span>
+          </div>
+        </div>
+        <button id="sidebarCloseBtn" class="btn-icon mobile-only" aria-label="Close sidebar">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-    </header>
 
+      <div class="sidebar-action-wrap">
+        <button id="newChatBtn" class="btn-action-primary">
+          <span class="btn-icon-emoji">✨</span>
+          <span>New Chat</span>
+        </button>
+      </div>
 
-    <section class="chat-card" aria-label="Chat">
-      <div id="messages" class="messages" aria-live="polite">
-        <div class="welcome-message">
-          <div class="assistant-avatar">✦</div>
-          <div class="bubble assistant-bubble">
-            Hey! I'm ready when you are. You can start by saying hello or typing a question below.
+      <div class="sidebar-scrollable">
+        <!-- Personas Selection Section -->
+        <div class="sidebar-section">
+          <div class="section-title-row">
+            <span class="sidebar-section-title">AI Persona</span>
+            <span class="badge-mini" id="activePersonaBadge">Beach Buddy 🏖️</span>
+          </div>
+          <div class="persona-grid" id="personaSelector" role="radiogroup" aria-label="Select Persona">
+            <button class="persona-chip active" data-persona="beach" title="Super cheerful and sunny beach friend!">
+              <span class="persona-icon">🏖️</span>
+              <span class="persona-name">Beach Buddy</span>
+            </button>
+            <button class="persona-chip" data-persona="default" title="Sweet, warm, and helpful companion">
+              <span class="persona-icon">🌟</span>
+              <span class="persona-name">Friendly</span>
+            </button>
+            <button class="persona-chip" data-persona="zen" title="Calming mindfulness & cozy warmth">
+              <span class="persona-icon">🧘</span>
+              <span class="persona-name">Zen Calm</span>
+            </button>
+            <button class="persona-chip" data-persona="storyteller" title="Vivid, delightful cozy storyteller">
+              <span class="persona-icon">🧸</span>
+              <span class="persona-name">Storyteller</span>
+            </button>
+            <button class="persona-chip" data-persona="tech" title="Developer companion, sharp & bright">
+              <span class="persona-icon">💻</span>
+              <span class="persona-name">Maestro</span>
+            </button>
+            <button class="persona-chip" data-persona="sage" title="Philosophical, deep & caring advice">
+              <span class="persona-icon">🧠</span>
+              <span class="persona-name">Sage</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ambient Soundscapes Player -->
+        <div class="sidebar-section">
+          <div class="section-title-row">
+            <span class="sidebar-section-title">Ambient Soundscape</span>
+            <span class="badge-mini" id="soundscapeStatus">Waves 🌊</span>
+          </div>
+          <div class="soundscape-control-card">
+            <div class="soundscape-chips" id="soundscapeChips">
+              <button class="sound-chip active" data-sound="waves" title="Relaxing ocean surf rhythm">
+                <span>🌊</span> Waves
+              </button>
+              <button class="sound-chip" data-sound="breeze" title="Mountain pine breeze">
+                <span>🏔️</span> Breeze
+              </button>
+              <button class="sound-chip" data-sound="rain" title="Gentle warm rain">
+                <span>🌧️</span> Rain
+              </button>
+              <button class="sound-chip" data-sound="zen" title="Temple resonant bowl bell">
+                <span>🔔</span> Zen
+              </button>
+              <button class="sound-chip" data-sound="off" title="Turn off soundscape">
+                <span>🔇</span> Off
+              </button>
+            </div>
+            <div class="soundscape-volume-row">
+              <span class="volume-icon">🔉</span>
+              <input type="range" id="soundscapeVolume" min="0" max="1" step="0.05" value="0.25" aria-label="Soundscape Volume">
+              <span class="volume-val" id="soundscapeVolumeVal">25%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation History Sessions -->
+        <div class="sidebar-section">
+          <div class="section-title-row">
+            <span class="sidebar-section-title">Saved Chats</span>
+            <button id="clearAllSessionsBtn" class="btn-text-dim" title="Clear all saved sessions">Clear</button>
+          </div>
+          <div class="session-list" id="sessionList">
+            <!-- Dynamically injected session items -->
+          </div>
+        </div>
+
+        <!-- Quick Inspiration Starters -->
+        <div class="sidebar-section">
+          <div class="section-title-row">
+            <span class="sidebar-section-title">Cute Prompts</span>
+          </div>
+          <div class="quick-prompts-list">
+            <button class="prompt-chip" data-prompt="What makes tropical beaches so cozy and healing for our minds?">
+              <span>🏖️</span> Beach cozy vibes
+            </button>
+            <button class="prompt-chip" data-prompt="Tell me a cute little story about a sea otter finding a shiny seashell!">
+              <span>🦦</span> Sea otter tale
+            </button>
+            <button class="prompt-chip" data-prompt="What are 3 delicious, refreshing tropical smoothie recipes?">
+              <span>🥥</span> Tropical smoothie
+            </button>
+            <button class="prompt-chip" data-prompt="Give me a sweet, heartwarming daily pep talk! ✨">
+              <span>🌸</span> Warm pep talk
+            </button>
           </div>
         </div>
       </div>
 
-      <div id="errorBox" class="error-box" role="alert" hidden></div>
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="connection-status">
+          <span class="status-pulse-dot"></span>
+          <span class="status-label" id="modelStatusLabel">Groq LPU Active</span>
+        </div>
+        <div class="footer-btn-row">
+          <button id="exportChatBtn" class="btn-sidebar-sub" title="Export conversation as Markdown">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+          </button>
+          <button id="settingsModalOpenBtn" class="btn-sidebar-sub" title="Voice & UI Settings">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Settings
+          </button>
+        </div>
+      </div>
+    </aside>
 
-      <div class="controls">
-        <button id="micButton" class="mic-button" type="button" title="Start voice recognition">
-          <span class="mic-icon">🎙</span>
-          <span id="micLabel">Start talking</span>
-          <span class="mic-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+    <!-- Main Content Workspace -->
+    <main class="main-workspace">
+      <!-- Top Navigation Header -->
+      <header class="top-nav" aria-label="Main Navigation">
+        <div class="nav-left">
+          <button id="sidebarToggleBtn" class="btn-icon" aria-label="Toggle navigation sidebar" title="Toggle Sidebar">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          
+          <div class="nav-branding">
+            <span class="nav-title">AURA <span class="nav-cute-badge">☀️ Beach Mode</span></span>
+            <span class="nav-tagline">Conversational Voice Companion</span>
+          </div>
+        </div>
+
+        <div class="nav-center">
+          <!-- Quick Theme Pill Switcher -->
+          <div class="theme-quick-bar" id="themeQuickBar">
+            <div class="theme-picker-toggle-wrap">
+              <button id="themePickerBtn" class="theme-selector-trigger" aria-haspopup="dialog" aria-expanded="false" title="Switch Theme">
+                <span class="current-theme-icon" id="currentThemeIcon">🏖️</span>
+                <span class="current-theme-name" id="currentThemeName">Tropical Beach</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-right">
+          <!-- Latency & Model Indicators -->
+          <div class="latency-pill" id="latencyIndicator" title="Estimated Groq API latency">
+            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="latencyValue">Fast</span>
+          </div>
+
+          <!-- Sound Effects Toggle -->
+          <button id="sfxToggleBtn" class="btn-icon active" title="Toggle cute sound effects" aria-pressed="true">
+            <span class="sfx-emoji">🔔</span>
+          </button>
+
+          <!-- Themes Palette Button -->
+          <button id="openThemeModalBtn" class="btn-theme-pill" title="Browse all aesthetic themes">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a4.5 4.5 0 000 9 4.5 4.5 0 010 9 4.5 4.5 0 010-9 4.5 4.5 0 000-9z"/></svg>
+            <span>Themes 🎨</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Center Chat Container -->
+      <section class="chat-viewport" id="chatViewport">
+        <!-- Interactive Welcome Hero (dismisses or sits at top) -->
+        <div id="welcomeHero" class="welcome-hero">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>✨ Your Cute Voice Bestie</span>
+          </div>
+          <h1 class="hero-heading">Breezy talks, happy thoughts 🏖️</h1>
+          <p class="hero-subheading">
+            Talk to an ultra-fast, sweet AI in real-time. Pick your favorite cozy vibe, relax to gentle ocean waves, and chat effortlessly!
+          </p>
+
+          <!-- Theme Showcase Carousel Cards -->
+          <div class="theme-hero-grid">
+            <button class="theme-card-mini active-hero-theme" data-theme-id="beach">
+              <div class="theme-swatch beach-swatch"></div>
+              <span class="theme-card-title">🏖️ Tropical Beach</span>
+              <span class="theme-card-sub">Golden sand & turquoise waters</span>
+            </button>
+            <button class="theme-card-mini" data-theme-id="waves">
+              <div class="theme-swatch waves-swatch"></div>
+              <span class="theme-card-title">🌊 Ocean Waves</span>
+              <span class="theme-card-sub">Deep aquatic blues & calm ripples</span>
+            </button>
+            <button class="theme-card-mini" data-theme-id="sakura">
+              <div class="theme-swatch sakura-swatch"></div>
+              <span class="theme-card-title">🌸 Sakura Blossom</span>
+              <span class="theme-card-sub">Blush rose petals & soft zen</span>
+            </button>
+            <button class="theme-card-mini" data-theme-id="mountain">
+              <div class="theme-swatch mountain-swatch"></div>
+              <span class="theme-card-title">🏔️ Alpine Mountain</span>
+              <span class="theme-card-sub">Pine greens, granite & cool air</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Messages Stream -->
+        <div id="messages" class="messages-container" aria-live="polite">
+          <!-- Initial Welcome Assistant Message -->
+          <div class="message-row assistant-row welcome-initial" id="initialBotGreeting">
+            <div class="assistant-avatar cute-avatar" aria-hidden="true">
+              <div class="avatar-glow"></div>
+              <span>🫧</span>
+            </div>
+            <div class="message-bubble-wrapper">
+              <div class="message-meta">
+                <span class="sender-name">Aura ✨</span>
+                <span class="message-time">Just now</span>
+              </div>
+              <div class="bubble assistant-bubble">
+                <p>Aloha! 🏖️ I'm Aura, your cheerful voice companion! Tap the mic button below or hold <kbd>Space</kbd> to talk to me. What are we exploring today? ☀️✨</p>
+              </div>
+              <div class="message-actions">
+                <button class="msg-action-btn speak-msg-btn" title="Speak message aloud">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                </button>
+                <button class="msg-action-btn copy-msg-btn" title="Copy message">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Notification Toast / Box -->
+        <div id="errorBox" class="error-notification" role="alert" hidden>
+          <div class="error-icon">⚠️</div>
+          <div class="error-content" id="errorText">An error occurred</div>
+          <button id="dismissErrorBtn" class="error-dismiss" aria-label="Dismiss error">×</button>
+        </div>
+      </section>
+
+      <!-- Bottom Interactive Voice Dock & Input Bar -->
+      <footer class="interaction-dock">
+        <!-- Reactive Audio Visualizer Canvas -->
+        <div class="visualizer-container" id="visualizerContainer">
+          <canvas id="audioVisualizerCanvas" class="visualizer-canvas" height="36"></canvas>
+          <div class="visualizer-status-pill" id="liveAudioStateBadge">
+            <span class="state-dot"></span>
+            <span id="liveAudioStateText">Ready 🏖️</span>
+          </div>
+        </div>
+
+        <!-- Voice & Controls Row -->
+        <div class="dock-controls-row">
+          <!-- Voice Settings Mini Toggles -->
+          <div class="dock-toggles-left">
+            <label class="switch-control" title="Automatically speak assistant responses">
+              <input type="checkbox" id="autoSpeak" checked>
+              <span class="switch-slider"></span>
+              <span class="switch-label">Auto-Speak 🌸</span>
+            </label>
+
+            <label class="switch-control" title="Hands-free auto-relisten after assistant speaks">
+              <input type="checkbox" id="handsFreeMode">
+              <span class="switch-slider"></span>
+              <span class="switch-label">Continuous 🐾</span>
+            </label>
+          </div>
+
+          <!-- Main Interactive Mic Centerpiece -->
+          <div class="dock-mic-center">
+            <button id="micButton" class="hero-mic-button cute-mic-btn" type="button" aria-label="Start voice recognition" title="Click or press Spacebar to talk">
+              <div class="mic-glow-ring"></div>
+              <div class="mic-ripple-ring"></div>
+              <div class="mic-icon-wrapper">
+                <svg class="mic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </div>
+              <div class="mic-wave-bars" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </button>
+            <div class="mic-status-caption">
+              <span id="micLabel">Tap to talk 🏖️</span>
+              <span class="mic-sub-hint">Hold <kbd class="kbd-mini">Space</kbd> or tap 🐾</span>
+            </div>
+          </div>
+
+          <!-- Dock Right Action Items -->
+          <div class="dock-actions-right">
+            <button id="stopSpeechBtn" class="btn-dock-action" title="Stop assistant speech" style="display:none;">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              <span>Pause 🤫</span>
+            </button>
+            <button id="clearChatBtn" class="btn-dock-action" title="Clear current messages">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              <span>Clear ✨</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Text Input Form -->
+        <form id="chatForm" class="composer-form">
+          <div class="input-field-wrapper">
+            <input id="messageInput" type="text" autocomplete="off" placeholder="Chat with Aura or talk freely... 🏖️✨ (Press Enter to send)" aria-label="Message input">
+            <button id="voiceInputQuickBtn" type="button" class="btn-input-mic" title="Quick voice trigger">
+              <span class="sparkle-mic">🎙️</span>
+            </button>
+          </div>
+          <button id="sendButton" type="submit" class="btn-send-message cute-send-btn" aria-label="Send message">
+            <span>Send 🌸</span>
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <!-- THEME SELECTOR MODAL / DRAWER -->
+  <div id="themeModal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card theme-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge">🎨</div>
+          <div>
+            <h2 class="modal-title">Atmospheric Themes</h2>
+            <p class="modal-subtitle">Choose an immersive vibe with dynamic lighting, gradients, and animated particles.</p>
+          </div>
+        </div>
+        <button id="themeModalCloseBtn" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
-        <label class="toggle-label">
-          <input id="autoSpeak" type="checkbox" checked>
-          <span>Speak replies</span>
-        </label>
       </div>
 
-      <form id="chatForm" class="composer">
-        <input id="messageInput" type="text" autocomplete="off" placeholder="Type your message here…" aria-label="Your message">
-        <button id="sendButton" type="submit" aria-label="Send message">Send <span>↗</span></button>
-      </form>
-    </section>
-  </main>
+      <div class="modal-body">
+        <div class="theme-catalog-grid" id="themeCatalogGrid">
+          <!-- 1. Ocean Waves -->
+          <div class="theme-catalog-card" data-theme-id="waves">
+            <div class="theme-preview waves-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🌊 Deep Blue</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Ocean Waves</span>
+                <span class="catalog-badge">Aqua</span>
+              </div>
+              <p class="catalog-desc">Bioluminescent blues, glass foam ripples, and serene oceanic calm.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 2. Tropical Beach -->
+          <div class="theme-catalog-card" data-theme-id="beach">
+            <div class="theme-preview beach-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🏖️ Golden Sand</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Tropical Beach</span>
+                <span class="catalog-badge">Sunny</span>
+              </div>
+              <p class="catalog-desc">Warm golden coast, turquoise tidal waters, and sun-kissed amber glow.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 3. Alpine Mountain -->
+          <div class="theme-catalog-card" data-theme-id="mountain">
+            <div class="theme-preview mountain-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🏔️ Pine & Frost</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Alpine Mountain</span>
+                <span class="catalog-badge">Earthy</span>
+              </div>
+              <p class="catalog-desc">Deep pine evergreens, misty slate granite, and crisp mountain breeze.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 4. Cosmic Aurora -->
+          <div class="theme-catalog-card" data-theme-id="aurora">
+            <div class="theme-preview aurora-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🌌 Star Dust</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Cosmic Aurora</span>
+                <span class="catalog-badge">Nebula</span>
+              </div>
+              <p class="catalog-desc">Dancing boreal emerald ribbons, velvet violet sky, and glowing starlight.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 5. Cyberpunk Neon -->
+          <div class="theme-catalog-card" data-theme-id="cyberpunk">
+            <div class="theme-preview cyberpunk-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">⚡ Neon Grid</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Cyberpunk Neon</span>
+                <span class="catalog-badge">Hi-Tech</span>
+              </div>
+              <p class="catalog-desc">Electric magenta, cyan laser accents, and deep obsidian dark matrix.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 6. Sakura Blossom -->
+          <div class="theme-catalog-card" data-theme-id="sakura">
+            <div class="theme-preview sakura-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🌸 Soft Petal</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Sakura Blossom</span>
+                <span class="catalog-badge">Zen</span>
+              </div>
+              <p class="catalog-desc">Soft blush rose, warm matcha undertones, and gentle cherry blossom petals.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 7. Desert Sunset -->
+          <div class="theme-catalog-card" data-theme-id="sunset">
+            <div class="theme-preview sunset-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🌅 Golden Hour</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Desert Sunset</span>
+                <span class="catalog-badge">Warm</span>
+              </div>
+              <p class="catalog-desc">Radiant terracotta, purple dusk gradients, and warm evening embers.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+
+          <!-- 8. Obsidian Minimal -->
+          <div class="theme-catalog-card" data-theme-id="obsidian">
+            <div class="theme-preview obsidian-preview">
+              <div class="preview-orb"></div>
+              <div class="preview-bubble">🌑 Stealth</div>
+            </div>
+            <div class="theme-catalog-info">
+              <div class="catalog-title-row">
+                <span class="catalog-theme-name">Obsidian Minimal</span>
+                <span class="catalog-badge">Pure Dark</span>
+              </div>
+              <p class="catalog-desc">Monochrome titanium glass, crisp contrast, and distraction-free dark UI.</p>
+            </div>
+            <button class="btn-select-theme">Apply Theme</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card settings-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge">⚙️</div>
+          <div>
+            <h2 class="modal-title">Audio & Engine Settings</h2>
+            <p class="modal-subtitle">Customize voice pitch, speech speed, system prompts, and background dynamics.</p>
+          </div>
+        </div>
+        <button id="settingsModalCloseBtn" class="btn-icon" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body settings-body">
+        <!-- Voice Selection -->
+        <div class="setting-group">
+          <label for="voiceSelect" class="setting-label">Speech Synthesis Voice</label>
+          <select id="voiceSelect" class="setting-select">
+            <option value="">Default System Voice</option>
+          </select>
+          <p class="setting-hint">Chooses available Web Speech API voices on your device.</p>
+        </div>
+
+        <!-- Speech Rate / Speed -->
+        <div class="setting-group">
+          <div class="setting-label-split">
+            <label for="speechRate" class="setting-label">Speech Rate (Speed)</label>
+            <span class="slider-badge" id="speechRateVal">1.0x</span>
+          </div>
+          <input type="range" id="speechRate" min="0.7" max="1.5" step="0.05" value="1.0" class="setting-slider">
+        </div>
+
+        <!-- Speech Pitch -->
+        <div class="setting-group">
+          <div class="setting-label-split">
+            <label for="speechPitch" class="setting-label">Voice Pitch</label>
+            <span class="slider-badge" id="speechPitchVal">1.0</span>
+          </div>
+          <input type="range" id="speechPitch" min="0.7" max="1.4" step="0.05" value="1.0" class="setting-slider">
+        </div>
+
+        <!-- Animated Background Toggle -->
+        <div class="setting-group-row">
+          <div>
+            <div class="setting-row-title">Atmospheric Particles & Glow</div>
+            <div class="setting-hint">Renders real-time floating waves, embers, or stars for each theme.</div>
+          </div>
+          <label class="switch-control">
+            <input type="checkbox" id="bgParticlesToggle" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- UI Sound Effects Toggle -->
+        <div class="setting-group-row">
+          <div>
+            <div class="setting-row-title">UI Feedback Audio (Haptics)</div>
+            <div class="setting-hint">Pleasant synthesized chimes on message send, receive, and mic toggle.</div>
+          </div>
+          <label class="switch-control">
+            <input type="checkbox" id="sfxAudioToggle" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Custom System Prompt -->
+        <div class="setting-group">
+          <label for="customSystemPrompt" class="setting-label">Custom Instruction (System Prompt)</label>
+          <textarea id="customSystemPrompt" class="setting-textarea" rows="3" placeholder="Leave blank to use the active persona's default prompt..."></textarea>
+          <p class="setting-hint">Directs how Groq formats and tones its responses.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="resetSettingsBtn" class="btn-modal-secondary">Reset to Defaults</button>
+        <button id="saveSettingsBtn" class="btn-modal-primary">Done</button>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
